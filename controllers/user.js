@@ -1,18 +1,27 @@
 const express = require('express')
 const { default: mongoose } = require('mongoose')
 const { userModel } = require('../models/user')
+const bcrypt = require('bcrypt');
 
-
+const saltRounds = 10;
 const userRouter = express.Router()
 
 userRouter.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body
-        const user = await userModel.findOne({ username: username, password: password })
+        const user = await userModel.findOne({ username: username})
         if (user) {
-            res.status(200).json(user)
+            bcrypt.compare(password, user.password, function(err, result) {
+                if(err || !result){
+                    res.status(404).json()
+                }else {
+                    const {userInfo,password} = user
+                    res.status(200).json(userInfo)
+                }
+            });
+            
         } else {
-            res.status(404).end("álkdh")
+            res.status(404).json()
         }
     } catch (error) {
         res.status(500).json(error)
@@ -26,9 +35,15 @@ userRouter.post("/register", async (req, res) => {
             res.status(400).json()
         } else {
             if (username && password) {
-                const user = new userModel({ username, password, firstName, lastName })
-                await user.save()
-                res.status(200).json({ username, firstName, lastName })
+                bcrypt.hash(myPlaintextPassword, saltRounds, function(err, hash) {
+                    if(err){
+                        res.status(400).json()
+                    }else{
+                        const user = new userModel({ username, password: hash, firstName, lastName })
+                        await user.save()
+                        res.status(200).json({ username, firstName, lastName })
+                    }
+                });
             } else {
                 res.status(400).json()
             }
