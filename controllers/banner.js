@@ -6,7 +6,6 @@ const {bannerModel} = require('../models/banner')
 const bannerRouter = express.Router()
 
 bannerRouter.get('/', async (req, res)=>{
-    console.log(req.cookies)
     try {
         const banners= await bannerModel.find()
         res.status(200).json(banners)

@@ -1,17 +1,13 @@
 const { default: mongoose } = require("mongoose");
 
-const typeSchema = new mongoose.Schema({
-    name: String
-})
 
 const categorySchema = new mongoose.Schema({
     name: String,
-    types: [typeSchema]
+    types: [{type: mongoose.Types.ObjectId, ref: 'type'}]
 })
 
 const categoryModel = mongoose.model('category', categorySchema)
 module.exports = {
-    typeSchema,
     categorySchema,
     categoryModel
 }

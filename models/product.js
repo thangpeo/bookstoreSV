@@ -7,7 +7,7 @@ const commentSchema = new mongoose.Schema({
   comment: String,
   displayName: String,
   date: {
-    default: Date.now,
+    default: new Date(),
     type: Date,
   },
 });
@@ -32,7 +32,7 @@ const productSchema = new mongoose.Schema(
     publisherId: { type: mongoose.Types.ObjectId, ref: "publisher" },
     genres: [
       {
-        genreId: mongoose.Types.ObjectId,
+        type: mongoose.Types.ObjectId,
         ref: "genre",
       },
     ],
@@ -40,14 +40,24 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    SKUs: [
-      {
-        originalPrice: { type: Number },
-        price: { type: Number },
-        quantity: { type: Number },
-        createAt: { type: Date, default: Date.now },
-      },
-    ],
+    SKUs: {
+      type: [
+        {
+          originalPrice: { type: Number, default: 0 },
+          price: { type: Number, default: 0 },
+          quantity: { type: Number, default: 0 },
+          createAt: { type: Date, default: new Date() },
+        },
+      ],
+      default: [
+        {
+          originalPrice: 0,
+          price: 0,
+          quantity: 0,
+          createAt: new Date(),
+        },
+      ],
+    },
     rating: {
       type: Number,
       default: 0,

@@ -51,7 +51,6 @@ mongoose.connect(URI)
         console.log('Connect to DB');
         app.listen(PORT,() =>{ 
             console.log(`server is running on port ${PORT}`);
-            console.log(mongoose.Types.ObjectId === mongoose.Types.ObjectId);
         });
     })
     .catch(err => {
