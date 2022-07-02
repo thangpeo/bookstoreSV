@@ -165,71 +165,6 @@ productRouter.get("/:id", async (req, res, next) => {
   }
   next();
 });
-productRouter.get("/comment/:id", async (req, res, next) => {
-  try {
-    const id = req.params.id;
-    const { page = 1, limit = config.listPerPage } = req.query;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json();
-    }
-    const comments = await productModel.aggregate([
-      { $match: { _id: mongoose.Types.ObjectId(id) } },
-      { $unwind: "$comments" },
-      {
-        $facet: {
-          total: [
-            {
-              $count: "count",
-            },
-          ],
-          comments: [
-            {
-              $project: {
-                comment: "$comments.comment",
-                displayName: "$comments.displayName",
-                rate: "$comments.rate",
-              },
-            },
-            {
-              $skip: getPageOffset(page, limit),
-            },
-            {
-              $limit: limit,
-            },
-          ],
-          rating: [
-            {
-              $group: {
-                _id: "$_id",
-                rateAvg: {
-                  $avg: "$comments.rate",
-                },
-              },
-            },
-          ],
-        },
-      },
-      {
-        $addFields: {
-          rating: {
-            $first: "$rating.rateAvg",
-          },
-          total: {
-            $first: "$total.count",
-          },
-        },
-      },
-    ]);
-    res.status(200).json({
-      ...comments[0],
-      totalPage: pagePagination(page, limit, comments[0].total).lastPage,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json(error);
-  }
-  next();
-});
 
 productRouter.post("/", async (req, res, next) => {
   try {
@@ -272,73 +207,88 @@ productRouter.put("/:id", async (req, res, next) => {
   next();
 });
 
-productRouter.get("/category/:id", async (req, res, next) => {
+productRouter.get("/comment/:id", async (req, res, next) => {
   try {
-    const { id, limit = config.listPerPage, page = 1 } = req.params;
+    const id = req.params.id;
+    const { page = 1, limit = config.listPerPage } = req.query;
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(200).json([]);
+      return res.status(400).json();
     }
-    const products = await productModel.aggregate([
-      { $match: { "category._id": mongoose.Types.ObjectId(id) } },
-      ...productAggregate({ limit }),
+    const comments = await productModel.aggregate([
+      { $match: { _id: mongoose.Types.ObjectId(id) } },
+      { $unwind: "$comments" },
+      {
+        $facet: {
+          total: [
+            {
+              $count: "count",
+            },
+          ],
+          comments: [
+            {
+              $project: {
+                comment: "$comments.comment",
+                displayName: "$comments.displayName",
+                rate: "$comments.rate",
+                date: "$comments.date",
+              },
+            },
+            {
+              $skip: getPageOffset(page, limit),
+            },
+            {
+              $limit: limit,
+            },
+          ],
+          rating: [
+            {
+              $group: {
+                _id: "$_id",
+                rateAvg: {
+                  $avg: "$comments.rate",
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          rating: {
+            $first: "$rating.rateAvg",
+          },
+          total: {
+            $first: "$total.count",
+          },
+        },
+      },
     ]);
-    res.status(200).json(products[0]);
+    res.status(200).json({
+      ...comments[0],
+      totalPage: pagePagination(page, limit, comments[0].total).lastPage,
+    });
   } catch (error) {
+    console.log(error);
     res.status(500).json(error);
   }
   next();
 });
-productRouter.get("/type/:id", async (req, res, next) => {
+productRouter.post("/comment/add", async (req, res) => {
   try {
-    const { id, limit = config.listPerPage } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(200).json([]);
+    const { username, productId, ...comment } = req.body;
+    const user = await productModel.findOne({ username: username });
+    if (!user) {
+      res.status(404).json();
+      return;
     }
-    const products = await productModel.aggregate([
-      { $match: { "type._id": mongoose.Types.ObjectId(id) } },
-      ...productAggregate({ limit }),
-    ]);
-    res.status(200).json(products[0]);
+    const product = await productModel.findByIdAndUpdate(productId, {
+      $push: { comments: comment },
+    });
+    res.status(200).json(comment);
   } catch (error) {
+    console.log(error);
     res.status(500).json(error);
   }
-  next();
-});
-
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
-}
-productRouter.get("/abc/test", async (req, res, next) => {
-  try {
-    // pub.forEach(async (p) => {
-    //   await productModel.updateMany(
-    //     { brand: { $regex: p.name, $options: "i" } },
-    //     {
-    //       $set: {
-    //         brand: { _id: mongoose.Types.ObjectId(p._id), name: p.name },
-    //       },
-    //     }
-    //   );
-    // });
-    // const categories = await categoryModel.find().populate("types");
-    // const pds = await productModel.find();
-    // pds.forEach(async (p) => {
-    //   const c = categories[getRandomInt(0, categories.length - 1)];
-    //   await productModel.findByIdAndUpdate(p._id, {
-    //     categoryId: mongoose.Types.ObjectId(c._id),
-    //     typeId: mongoose.Types.ObjectId(
-    //       c.types[getRandomInt(0, c.types.length - 1)]._id
-    //     ),
-    //   });
-    // });
-   const aa = await categoryModel.find().populate('products')
-    res.status(200).json(aa);
-  } catch (error) {
-    res.status(500).json(error);
-  }
-  next();
 });
 
 module.exports = productRouter;

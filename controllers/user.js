@@ -9,13 +9,13 @@ const userRouter = express.Router();
 userRouter.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const user = await userModel.findOne({ username: username });
+    const user = await userModel.findOne({ username: username }).lean();
     if (user) {
       bcrypt.compare(password, user.password, function (err, result) {
         if (err || !result) {
           res.status(404).json();
         } else {
-          const { userInfo, password } = user;
+          const { password, ...userInfo } = user;
           res.status(200).json(userInfo);
         }
       });
@@ -33,28 +33,20 @@ userRouter.post("/register", async (req, res) => {
     if (oldUser) {
       res.status(400).json();
     } else {
-      if (username && password) {
-        bcrypt.hash(
-          myPlaintextPassword,
-          saltRounds,
-          async function (err, hash) {
-            if (err) {
-              res.status(400).json();
-            } else {
-              const user = new userModel({
-                username,
-                password: hash,
-                firstName,
-                lastName,
-              });
-              await user.save();
-              res.status(200).json({ username, firstName, lastName });
-            }
-          }
-        );
-      } else {
-        res.status(400).json();
-      }
+      bcrypt.hash(password, saltRounds, async function (err, hash) {
+        if (err) {
+          res.status(400).json();
+        } else {
+          const user = new userModel({
+            username,
+            password: hash,
+            firstName,
+            lastName,
+          });
+          await user.save();
+          res.status(200).json({ username, firstName, lastName });
+        }
+      });
     }
   } catch (error) {
     res.status(500).json(error);
@@ -88,8 +80,21 @@ userRouter.put("/update", async (req, res) => {
 });
 userRouter.post("/shippingaddress", async (req, res) => {
   try {
+    const { username } = req.body;
+    const user = await userModel.findOne({ username: username });
+    if (user) {
+      res.status(200).json(user.shippingAddress);
+    } else {
+      res.status(200).json([]);
+    }
+  } catch (error) {
+    res.status(500).json();
+  }
+});
+userRouter.post("/shippingaddress/add", async (req, res) => {
+  try {
     const { username, ...shippingAddress } = req.body;
-    // console.log(username, shippingAddress);
+    console.log(username, shippingAddress);
     const user = await userModel.findOneAndUpdate(
       { username: username },
       { $push: { shippingAddress: shippingAddress } },

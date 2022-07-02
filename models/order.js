@@ -18,7 +18,7 @@ const orderSchema = new mongoose.Schema({
         country: String,
         province: String,
         district: String,
-        wards: String,
+        ward: String,
         address: String
     }
 })
