@@ -51,7 +51,7 @@ const productAggregate = ({ page = 1, limit = config.listPerPage }) => [
   },
 ];
 
-productRouter.get("/", async (req, res, next) => {
+productRouter.get("/", async (req, res) => {
   try {
     const {
       page = 1,
@@ -124,11 +124,9 @@ productRouter.get("/", async (req, res, next) => {
       totalPage: pagination.lastPage,
     });
 
-    // res.status(200).json(await productModel.find())
   } catch (error) {
     res.status(500).json(error);
   }
-  next();
 });
 
 productRouter.get("/:id", async (req, res, next) => {

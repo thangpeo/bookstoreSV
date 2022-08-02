@@ -12,7 +12,7 @@ const userRouter = require('./controllers/user');
 const orderRouter = require('./controllers/order');
 
 const PORT = process.env.PORT || 5000
-const URI = 'mongodb://localhost:27017/BookStore'
+const URI = 'mongodb+srv://admin:DRkvRMp0ZcuUTfKy@bookstoredb.zasyt.mongodb.net/BookStore?retryWrites=true&w=majority'
 
 const app = express()
 
