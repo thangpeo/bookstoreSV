@@ -11,7 +11,7 @@ const bannerRouter = require('./controllers/banner');
 const userRouter = require('./controllers/user');
 const orderRouter = require('./controllers/order');
 
-const PORT = process.env.PORT || 5000
+
 const URI = 'mongodb+srv://admin:DRkvRMp0ZcuUTfKy@bookstoredb.zasyt.mongodb.net/BookStore?retryWrites=true&w=majority'
 
 const app = express()
@@ -45,6 +45,8 @@ app.use('/user', userRouter)
 
 app.use('/order', orderRouter)
 
+
+const PORT = process.env.PORT || 3000
 
 mongoose.connect(URI)
     .then(() => {
